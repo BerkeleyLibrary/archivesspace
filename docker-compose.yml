@@ -1,0 +1,69 @@
+version: "3.8"
+services:
+  app:
+    build:
+      dockerfile: Dockerfile 
+    user: "1000:1000"
+    command: bash -c "/archivesspace/scripts/setup-database.sh && /archivesspace/archivesspace.sh"
+    restart: on-failure
+    ports:
+      - "8080:8080"
+      - "8081:8081"
+      - "8082:8082"
+      - "8089:8089"
+      - "8090:8090"
+    depends_on:
+      - db
+      - solr
+    volumes:
+      - ./run/secrets:/run/secrets:ro
+    environment:
+      ASPACE_DB_USER_FILE: ./run/secrets/ASPACE_DB_USER
+      ASPACE_DB_PASSWORD_FILE: ./run/secrets/ASPACE_DB_PASSWORD
+      #APPCONFIG_DB_URL: 'jdbc:mysql://db:3306/archivesspace?useUnicode=true&characterEncoding=UTF-8&user=${ASPACE_DB_USER_FILE}&password=${ASPACE_DB_PASSWORD_FILE}'
+      APPCONFIG_DB_URL: 'jdbc:mysql://db:3306/archivesspace?useUnicode=true&characterEncoding=UTF-8&user=${ASPACE_DB_USER}&password=${ASPACE_DB_PASSWORD}'
+      # solr config
+      APPCONFIG_ENABLE_SOLR: 'false'
+      APPCONFIG_SOLR_URL: 'http://solr:8983/solr/archivesspace'
+      # proxy config
+      APPCONFIG_FRONTEND_PROXY_URL: 'http://localhost/staff/'
+      APPCONFIG_OAI_PROXY_URL: 'http://localhost/oai'
+      APPCONFIG_PUBLIC_PROXY_URL: 'http://localhost/'
+      # testing plugin initialization on startup
+      #ASPACE_INITIALIZE_PLUGINS: 'newrelic'
+      ASPACE_INITIALIZE_PLUGINS: 'digitization_work_order'
+#      APPCONFIG_PLUGINS: 'digitization_work_order'
+      #  - "local"
+      #  - "lcnaf"
+      #  - "digitization_work_order"
+      JAVA_OPTS: "-Djava.awt.headless=true -Dfile.encoding=UTF-8 -server -Xss512k -Djavax.accessibility.assistive_technologies=''"
+     # volumes:
+#        - ./plugins/newrelic:/archivesspace/plugins/newrelic
+  solr:
+    image: solr:8.10.0 
+    ports: 
+      - "8983:8983"
+    restart: always
+    command: solr-create -p 8983 -c archivesspace -d archivesspace
+    volumes:
+      - ./solr_config:/opt/solr-8.10.0/server/solr/configsets/archivesspace/conf
+#      - ./solr_data:/var/solr/data:rw
+#      - ./solr_config:/var/solr/data/archivesspace/conf:rw
+  db:
+    environment:
+      - MYSQL_ROOT_PASSWORD=${ASPACE_DB_ROOT_PASSWORD}
+      - MYSQL_ALLOW_EMPTY_PASSWORD=yes
+      - MYSQL_DATABASE=archivesspace
+      - MYSQL_USER=${ASPACE_DB_USER}
+      - MYSQL_PASSWORD=${ASPACE_DB_PASSWORD}
+    image: mariadb:10.9
+    ports:
+      - "3306:3306"
+    command: --character-set-server=utf8 --collation-server=utf8_unicode_ci --innodb_buffer_pool_size=2G --innodb_buffer_pool_instances=2 --log_bin_trust_function_creators=1
+    networks:
+      default:
+        aliases:
+          - db.test
+    restart: always
+#    volumes:
+#      - ./init:/docker-entrypoint-initdb.d
