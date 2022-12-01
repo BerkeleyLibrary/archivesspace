@@ -1,71 +1,89 @@
-FROM ubuntu:20.04 as build_release
+# ============================================================
+# BASE Stage
+FROM ubuntu:20.04 AS base
 
-# Please note: Docker is not supported as an install method.
-# Docker configuration is being used for internal purposes only.
-# Use of Docker by anyone else is "use at your own risk".
-# Docker related files may be updated at anytime without
-# warning or presence in release notes.
+ARG ARCHIVESSPACE_VERSION="v3.3.1"
+ARG ARCHIVESSPACE_USER_UID="40052"
+ARG ARCHIVESSPACE_USER_GID="40052"
+ARG DWO_PLUGIN_VERSION="v1.13"
+ARG MYSQL_CONNECTOR_VERSION="8.0.23"
 
-ENV DEBIAN_FRONTEND=noninteractive \
-    TZ=UTC
-
-ARG ASPACE_VERSION='v3.3.1'
-
-RUN apt-get update && \
-    apt-get -y install --no-install-recommends \
-      build-essential \
-      git \
-      openjdk-11-jre-headless \
-      shared-mime-info \
-      wget \
-      unzip
-
-COPY . /source
-
-RUN cd /source && \
-    wget https://github.com/archivesspace/archivesspace/releases/download/$ASPACE_VERSION/archivesspace-$ASPACE_VERSION.zip && \
-    mv ./*.zip / && \
-    cd / && \
-    unzip /*.zip -d / && \
-    #mv /source/config.rb /archivesspace/config/config.rb && \
-    wget https://repo1.maven.org/maven2/mysql/mysql-connector-java/8.0.23/mysql-connector-java-8.0.23.jar && \
-    cp ./mysql-connector-java-8.0.23.jar /archivesspace/lib/ && \ 
-    wget -c https://github.com/hudmol/digitization_work_order/archive/refs/tags/v1.13.zip -O dig-v1.13.zip && \ 
-    unzip ./dig-v1.13.zip -d /archivesspace/plugins/ && \
-    wget -c https://github.com/quoideneuf/aspace_oclc/releases/download/0.0.2/oclc.zip -O oclc.zip && \
-    unzip ./oclc.zip -d /archivesspace/plugins/oclc/ 
-    
-
-FROM ubuntu:20.04
-
-LABEL maintainer="ArchivesSpaceHome@lyrasis.org"
-
-ENV ARCHIVESSPACE_LOGS=/dev/null \
-    DEBIAN_FRONTEND=noninteractive \
-    LANG=C.UTF-8 \
-    TZ=UTC
-
-COPY --from=build_release /archivesspace /archivesspace
+ENV ARCHIVESSPACE_LOGS="/dev/stdout"
+ENV ARCHIVESSPACE_PLUGIN_DWO_URL="https://github.com/hudmol/digitization_work_order/archive/refs/tags/${DWO_PLUGIN_VERSION}.zip"
+ENV ARCHIVESSPACE_SOURCE_URL="https://github.com/archivesspace/archivesspace/releases/download/${ARCHIVESSPACE_VERSION}/archivesspace-${ARCHIVESSPACE_VERSION}.zip"
+ENV DEBIAN_FRONTEND="noninteractive"
+ENV LANG="C.UTF-8"
+ENV MYSQL_CONNECTOR_JAR_URL="https://repo1.maven.org/maven2/mysql/mysql-connector-java/${MYSQL_CONNECTOR_VERSION}/mysql-connector-java-${MYSQL_CONNECTOR_VERSION}.jar"
+ENV TZ="UTC"
 
 RUN apt-get update && \
     apt-get -y install --no-install-recommends \
       ca-certificates \
       git \
-      openjdk-11-jre-headless \
       netbase \
+      openjdk-11-jre-headless \
       shared-mime-info \
       vim \
       wget \
       unzip && \
     rm -rf /var/lib/apt/lists/* && \
-    groupadd -g 1000 archivesspace && \
-    useradd -l -M -u 1000 -g archivesspace archivesspace && \
-    chown -R archivesspace:archivesspace /archivesspace
+    groupadd -g "$ARCHIVESSPACE_USER_GID" archivesspace && \
+    useradd -M -u "$ARCHIVESSPACE_USER_UID" -g archivesspace archivesspace
 
-EXPOSE 8080 8081 8089 8090 8092
+# ============================================================
+# Install ArchivesSpace
+FROM base AS aspace
+WORKDIR /opt
+RUN wget -O aspace.zip "$ARCHIVESSPACE_SOURCE_URL" && \
+    unzip aspace.zip && \
+    mv archivesspace app && \
+    chown -R archivesspace:archivesspace app && \
+    rm -f aspace.zip
+
+# Install MySQL Connector Java
+RUN wget -O /opt/app/lib/$(basename "$MYSQL_CONNECTOR_JAR_URL") "$MYSQL_CONNECTOR_JAR_URL"
+
+# ============================================================
+# Install the Digitization Work Order plugin
+FROM aspace AS digitization_work_order
+WORKDIR /tmp
+RUN wget -O digitization_work_order.zip "$ARCHIVESSPACE_PLUGIN_DWO_URL" && \
+    unzip digitization_work_order.zip && \
+    mv digitization_work_order-* /opt/app/plugins/digitization_work_order && \
+    /opt/app/scripts/initialize-plugin.sh digitization_work_order && \
+    rm -f digitization_work_order.zip
+
+# ============================================================
+# FINAL Stage
+FROM base AS final
+
+# Copy the application
+COPY --from=aspace --chown=root:archivesspace /opt/app /opt/app
+# Copy the built DWO plugin
+COPY --from=digitization_work_order --chown=root:archivesspace \
+    /opt/app/plugins/digitization_work_order \
+    /opt/app/plugins/digitization_work_order
+
+# Install the entrypoint script.
+COPY --chown=root:archivesspace docker-entrypoint.sh /bin/docker-entrypoint.sh
+RUN chmod ug+x /bin/docker-entrypoint.sh
+ENTRYPOINT ["/bin/docker-entrypoint.sh"]
+
+USER archivesspace
+WORKDIR /opt/app
+
+# Note the `EXPOSE` is purely advisory. You can always map ports at runtime.
+# @see https://archivesspace.github.io/tech-docs/customization/configuration.html
+# staff interface
+EXPOSE 8080
+# public interface
+EXPOSE 8081
+# OAI-PMH server
+EXPOSE 8082
+# backend
+EXPOSE 8089
+# solr admin console
+EXPOSE 8090
 
 HEALTHCHECK --interval=1m --timeout=5s --start-period=5m --retries=2 \
   CMD wget -q --spider http://localhost:8089/ || exit 1
-
-USER archivesspace 
-CMD /archivesspace/archivesspace.sh
