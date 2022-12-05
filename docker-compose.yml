@@ -17,7 +17,7 @@ services:
       - source: config.rb
         target: /opt/app/config/config.rb
       - source: en.yml
-        target: /opt/app/locales/enums/en.yml
+        target: /opt/app/plugins/local/public/locales/en.yml
     secrets:
       # @note Customize these in your local .env file if necessary
       - APPCONFIG_DB_URL
@@ -40,6 +40,10 @@ services:
   
   solr:
     image: solr:8.11.2
+    environment:
+      # Eliminates "failed to reserve shared memory" warning
+      # @see https://support.pingidentity.com/s/article/Addressing-Failed-to-reserve-shared-memory-errors
+      GC_TUNE: -XX:-UseLargePages
     ports:
       - 8983:8983
     command: solr-precreate archivesspace /opt/solr-8.10.0/server/solr/configsets/archivesspace
