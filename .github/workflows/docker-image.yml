@@ -1,5 +1,5 @@
 name: Build
-on: [ push ]
+on: [ push, workflow_dispatch ]
 env:
   REGISTRY: ghcr.io
 
@@ -64,20 +64,6 @@ jobs:
             GIT_URL=${{ github.repositoryUrl }}
     outputs:
       build_image: ${{ env.BUILD_IMAGE }}
-
-  test:
-    if: github.event_name != 'release'
-    needs: build
-
-    runs-on: ubuntu-latest
-
-    container:
-      image: ${{ needs.build.outputs.build_image }}
-
-    defaults:
-      run:
-        working-directory: /opt/app
-    
 
   # TODO: DRY w/release.yml
   push:
