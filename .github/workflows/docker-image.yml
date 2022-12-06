@@ -34,12 +34,13 @@ jobs:
 
     permissions:
       packages: write
+      contents: read
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
         with:
-          token: ${{ secrets.PUSH_ASPACE_IMAGE }} 
+          token: ${{ secrets.GITHUB_TOKEN }} 
            
       - name: Log in to the Container registry
         uses: docker/login-action@v2
