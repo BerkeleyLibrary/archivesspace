@@ -3,16 +3,22 @@ name: Docker Image CI
 on:
   push:
     branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
-
+ 
 jobs:
 
-  build:
-
+  build_and_publish:
+   
     runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
 
     steps:
+    
     - uses: actions/checkout@v3
-    - name: Build the Docker image
-      run: docker build . --file Dockerfile --tag main:$(date +%s)
+    - name: Build and publish the Docker image
+      uses: VaultVulp/gp-docker-action@1.1.12
+      with: 
+        github-token: ${{ secrets.GITHUB_TOKEN }} 
+        image-name: berkeleylibrary/archivesspace
+        build-context: ./   
+     
+
