@@ -183,7 +183,7 @@ AppConfig[:plugins] = (ENV['APPCONFIG_PLUGINS_OVERRIDE'] || 'local,lcnaf').split
 #AppConfig[:indexer_solr_timeout_seconds] = 300
 #
 ## PUI Indexer Settings
-#AppConfig[:pui_indexer_enabled] = true
+AppConfig[:pui_indexer_enabled] = false
 #AppConfig[:pui_indexing_frequency_seconds] = 30
 #AppConfig[:pui_indexer_records_per_thread] = 25
 #AppConfig[:pui_indexer_thread_count] = 1
