@@ -1,6 +1,11 @@
 name: Build
-on: [ push, workflow_dispatch ]
+
+on:
+  - push
+  - workflow_dispatch
+
 env:
+  CI: present
   REGISTRY: ghcr.io
 
 jobs:
@@ -20,6 +25,7 @@ jobs:
       - name: Get short SHA
         run: |
           echo SHORT_SHA="${GITHUB_SHA:0:7}" >> $GITHUB_ENV
+    
     outputs:
       base_image_name: ${{ steps.image-name.outputs.result }}
       build_image: ${{ steps.image-name.outputs.result }}:${{ env.SHORT_SHA }}
@@ -37,11 +43,15 @@ jobs:
       contents: read
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
         with:
-          token: ${{ secrets.GITHUB_TOKEN }} 
-           
+          platforms: all
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+        id: buildx
+        
       - name: Log in to the Container registry
         uses: docker/login-action@v2
         with:
@@ -52,12 +62,11 @@ jobs:
       - name: Get build start time
         run: |
           echo BUILD_TIMESTAMP="$(date --utc --iso-8601=seconds)" >> $GITHUB_ENV
+
       - name: Build and push Docker image
         uses: docker/build-push-action@v3
         with:
-          context: .
-          push: true
-          tags: ${{ env.BUILD_IMAGE }}
+          builder: ${{ steps.buildx.outputs.name }}
           build-args: |
             BUILD_TIMESTAMP=${{ env.BUILD_TIMESTAMP }}
             BUILD_URL=https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
@@ -65,6 +74,16 @@ jobs:
             GIT_BRANCH=${{ github.ref_name }}
             GIT_COMMIT=${{ github.sha }}
             GIT_URL=${{ github.repositoryUrl }}
+          labels: |
+            org.opencontainers.image.created=${{ env.BUILD_TIMESTAMP }}
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.source=${{ github.repositoryUrl }}
+            org.opencontainers.image.url=https://github.com/${{ github.repository }}/commit/${{ github.sha }}/checks/${{ github.run_id }}
+          platforms: linux/amd64,linux/arm64,linux/ppc64le
+          push: true
+          secrets: |
+            GIT_AUTH_TOKEN=${{ secrets.GITHUB_TOKEN }}
+          tags: ${{ env.BUILD_IMAGE }}
     outputs:
       build_image: ${{ env.BUILD_IMAGE }}
 
@@ -102,5 +121,3 @@ jobs:
           src: ${{ env.BUILD_IMAGE }}
           dst: |
             ${{ steps.meta.outputs.tags }}
-
-

@@ -2,7 +2,11 @@ version: "3.8"
 
 services:
   app: &services_app
-    build: .
+    build:
+      x-bake:
+        platforms:
+          - linux/amd64
+          - linux/arm64
     user: root
     ports:
       - 8080:8080
