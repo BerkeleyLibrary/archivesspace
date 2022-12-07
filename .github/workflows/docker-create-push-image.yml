@@ -1,5 +1,5 @@
 name: Build
-on: [ push, workflow_dispatch ]
+on: [ push ]
 env:
   REGISTRY: ghcr.io
 
@@ -34,14 +34,11 @@ jobs:
 
     permissions:
       packages: write
-      contents: read
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }} 
-           
+
       - name: Log in to the Container registry
         uses: docker/login-action@v2
         with:
@@ -68,6 +65,19 @@ jobs:
     outputs:
       build_image: ${{ env.BUILD_IMAGE }}
 
+  test:
+    if: github.event_name != 'release'
+    needs: build
+
+    runs-on: ubuntu-latest
+
+    container:
+      image: ${{ needs.build.outputs.build_image }}
+
+    defaults:
+      run:
+        working-directory: /opt/app
+ 
   # TODO: DRY w/release.yml
   push:
     if: github.event_name != 'release'
@@ -102,5 +112,3 @@ jobs:
           src: ${{ env.BUILD_IMAGE }}
           dst: |
             ${{ steps.meta.outputs.tags }}
-
-
