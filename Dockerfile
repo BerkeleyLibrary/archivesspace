@@ -9,7 +9,7 @@ ARG ARCHIVESSPACE_USER_GID="40052"
 ARG DWO_PLUGIN_VERSION="v1.13"
 ARG MYSQL_CONNECTOR_VERSION="8.0.23"
 
-ENV ARCHIVESSPACE_LOGS="/dev/stdout"
+ENV ARCHIVESSPACE_LOGS="/dev/null"
 ENV ARCHIVESSPACE_PLUGIN_DWO_URL="https://github.com/hudmol/digitization_work_order/archive/refs/tags/${DWO_PLUGIN_VERSION}.zip"
 ENV ARCHIVESSPACE_SOURCE_URL="https://github.com/archivesspace/archivesspace/releases/download/${ARCHIVESSPACE_VERSION}/archivesspace-${ARCHIVESSPACE_VERSION}.zip"
 ENV DEBIAN_FRONTEND="noninteractive"
