@@ -100,7 +100,8 @@
 #AppConfig[:locale] = :en
 #
 ## Plug-ins to load. They will load in the order specified
-AppConfig[:plugins] = (ENV['APPCONFIG_PLUGINS_OVERRIDE'] || 'local,lcnaf').split(',')
+#AppConfig[:plugins] = (ENV['APPCONFIG_PLUGINS_OVERRIDE'] || 'local,lcnaf').split(',')
+AppConfig[:plugins] = ['local', 'lcnaf', 'digitization_work_order', 'material_types']
 #
 ## The number of concurrent threads available to run background jobs
 ## Resist the urge to set this to a big number as it will affect performance
@@ -503,6 +504,8 @@ AppConfig[:pui_indexer_enabled] = false
 #AppConfig[:pui_branding_img_alt_text] = 'ArchivesSpace - a community served by Lyrasis.'
 #
 #AppConfig[:frontend_branding_img] = 'archivesspace/archivesspace.small.png'
+AppConfig[:frontend_branding_img] = 'assets/images/bancroft_prod.png'
+AppConfig[:frontend_branding_img_alt_text] = 'Bancroft Prod'
 #AppConfig[:frontend_branding_img_alt_text] = 'ArchivesSpace - a community served by Lyrasis.'
 #
 #AppConfig[:pui_block_referrer] = true # patron privacy; blocks full 'referrer' when going outside the domain

@@ -16,8 +16,12 @@ services:
     configs:
       - source: config.rb
         target: /opt/app/config/config.rb
+      - source: message.yml
+        target: /opt/app/plugins/local/frontend/locales/en.yml
       - source: en.yml
         target: /opt/app/plugins/local/public/locales/en.yml
+      - source: bancroft_prod.png 
+        target: /opt/app/plugins/local/frontend/assets/images/bancroft_prod.png
     secrets:
       # @note Customize these in your local .env file if necessary
       - APPCONFIG_DB_URL
@@ -25,7 +29,7 @@ services:
       # @note ArchivesSpace settings can be specified by setting ENV vars of the form
       #       APPCONFIG_<Upcased Parameter Name>. We have run into problems with any
       #       that require parsing JSON, however, so avoid that.
-      APPCONFIG_PLUGINS_OVERRIDE: local,lcnaf,digitization_work_order
+#      APPCONFIG_PLUGINS_OVERRIDE: local,lcnaf,digitization_work_order,material_types
       APPCONFIG_SOLR_URL: http://solr:8983/solr/archivesspace
       JAVA_OPTS: "-Djava.awt.headless=true -Dfile.encoding=UTF-8 -server -Xss512k -Djavax.accessibility.assistive_technologies=''"
     volumes:
@@ -69,7 +73,11 @@ configs:
     file: config/config.rb
   en.yml:
     file: config/en.yml
-
+  message.yml:
+    file: config/message.yml
+  bancroft_prod.png:  
+    file: config/bancroft_prod.png
+    
 secrets:
   APPCONFIG_DB_URL:
     environment: APPCONFIG_DB_URL

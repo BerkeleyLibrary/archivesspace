@@ -1,0 +1,5 @@
+en:
+  welcome:
+    heading: Welcome to Bancroft production 
+    message: You are on Bancroft production 
+    message_logged_in: your logged into Bancroft production 
