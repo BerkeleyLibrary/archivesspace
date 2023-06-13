@@ -7,10 +7,12 @@ ARG ARCHIVESSPACE_VERSION="v3.3.1"
 ARG ARCHIVESSPACE_USER_UID="40052"
 ARG ARCHIVESSPACE_USER_GID="40052"
 ARG DWO_PLUGIN_VERSION="v1.13"
+ARG MT_PLUGIN_VERSION="v1.5"
 ARG MYSQL_CONNECTOR_VERSION="8.0.23"
 
 ENV ARCHIVESSPACE_LOGS="/dev/null"
 ENV ARCHIVESSPACE_PLUGIN_DWO_URL="https://github.com/hudmol/digitization_work_order/archive/refs/tags/${DWO_PLUGIN_VERSION}.zip"
+ENV ARCHIVESSPACE_PLUGIN_MT_URL="https://github.com/hudmol/material_types/archive/refs/tags/${MT_PLUGIN_VERSION}.zip"
 ENV ARCHIVESSPACE_SOURCE_URL="https://github.com/archivesspace/archivesspace/releases/download/${ARCHIVESSPACE_VERSION}/archivesspace-${ARCHIVESSPACE_VERSION}.zip"
 ENV DEBIAN_FRONTEND="noninteractive"
 ENV LANG="C.UTF-8"
@@ -54,6 +56,22 @@ RUN wget -O digitization_work_order.zip "$ARCHIVESSPACE_PLUGIN_DWO_URL" && \
     /opt/app/scripts/initialize-plugin.sh digitization_work_order && \
     rm -f digitization_work_order.zip
 
+# Install the Material Types plugin
+FROM aspace AS material_types
+WORKDIR /tmp
+# Install the Material Types plugin
+RUN wget -O material_types.zip "$ARCHIVESSPACE_PLUGIN_MT_URL" && \ 
+  unzip material_types.zip && \
+  mv material_types-* /opt/app/plugins/material_types && \ 
+#  /opt/app/scripts/initialize-plugin.sh material_types && \
+  rm -f material_types.zip
+  
+#RUN wget -O material_types.zip "$ARCHIVESSPACE_PLUGIN_MT_URL" && \
+#    unzip material_types.zip && \
+#    mv material_types-* /opt/app/plugins/material_types && \
+#    /opt/app/scripts/initialize-plugin.sh material_types && \
+#    rm -f material_types.zip
+
 # ============================================================
 # FINAL Stage
 FROM base AS final
@@ -64,6 +82,10 @@ COPY --from=aspace --chown=root:archivesspace /opt/app /opt/app
 COPY --from=digitization_work_order --chown=root:archivesspace \
     /opt/app/plugins/digitization_work_order \
     /opt/app/plugins/digitization_work_order
+# Copy the Material types plugin
+COPY --from=material_types --chown=root:archivesspace \
+    /opt/app/plugins/material_types \
+    /opt/app/plugins/material_types
 
 # Install the entrypoint script.
 COPY --chown=root:archivesspace docker-entrypoint.sh /bin/docker-entrypoint.sh
