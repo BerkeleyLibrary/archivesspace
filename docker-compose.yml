@@ -10,7 +10,6 @@ services:
       - 8082:8082
       - 8089:8089
       - 8090:8090
-# this
     depends_on:
       - db
       - solr
