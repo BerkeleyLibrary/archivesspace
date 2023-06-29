@@ -27,6 +27,7 @@ services:
       #       that require parsing JSON, however, so avoid that.
       APPCONFIG_PLUGINS_OVERRIDE: local,lcnaf,digitization_work_order
       APPCONFIG_SOLR_URL: http://solr:8983/solr/archivesspace
+      APPCONFIG_SOLR_VERIFY_CHECKSUMS: "false"
       JAVA_OPTS: "-Djava.awt.headless=true -Dfile.encoding=UTF-8 -server -Xss512k -Djavax.accessibility.assistive_technologies=''"
     volumes:
       - aspace_data:/opt/app/data
