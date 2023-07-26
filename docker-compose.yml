@@ -10,14 +10,18 @@ services:
       - 8082:8082
       - 8089:8089
       - 8090:8090
-    depends_on:
-      - db
-      - solr
     configs:
       - source: config.rb
         target: /opt/app/config/config.rb
-      - source: en.yml
-        target: /opt/app/plugins/local/public/locales/en.yml
+      - source: en-locales.yml
+        target: /opt/app/locales/enums/en.yml
+    depends_on:
+      db:
+        condition: service_started
+      solr:
+        condition: service_healthy
+      updater:
+        condition: service_completed_successfully 
     secrets:
       # @note Customize these in your local .env file if necessary
       - APPCONFIG_DB_URL
@@ -25,16 +29,26 @@ services:
       # @note ArchivesSpace settings can be specified by setting ENV vars of the form
       #       APPCONFIG_<Upcased Parameter Name>. We have run into problems with any
       #       that require parsing JSON, however, so avoid that.
-      APPCONFIG_PLUGINS_OVERRIDE: local,lcnaf,digitization_work_order
-      APPCONFIG_SOLR_URL: http://solr:8983/solr/archivesspace
-      APPCONFIG_SOLR_VERIFY_CHECKSUMS: "false"
-      JAVA_OPTS: "-Djava.awt.headless=true -Dfile.encoding=UTF-8 -server -Xss512k -Djavax.accessibility.assistive_technologies=''"
+      #APPCONFIG_FRONTEND_BRANDING_IMG: "assets/images/banner_logo.png" 
+      - APPCONFIG_FRONTEND_BRANDING_IMG=assets/images/aspace_lit_development.png
+      - APPCONFIG_FRONTEND_BRANDING_IMG_ALT_TEXT=ArchivesSpace Local Development Logo
+      - APPCONFIG_PLUGINS_OVERRIDE=local,lcnaf,digitization_work_order
+      - APPCONFIG_ENABLE_PUBLIC=false
+      - APPCONFIG_SOLR_URL=http://solr:8983/solr/archivesspace
+      - APPCONFIG_SOLR_VERIFY_CHECKSUMS=false
+      - ASPACE_LOGGED_IN_MSG=You are logged in to a local development instance of ArchivesSpace
+      - ASPACE_WELCOME_HEADING=ArchivesSpace Development (local)
+      - ASPACE_WELCOME_MESSAGE=You are on a local development instance of ArchivesSpace
+      - JAVA_OPTS=-Djava.awt.headless=true -Dfile.encoding=UTF-8 -server -Xss512k -Djavax.accessibility.assistive_technologies=''
     volumes:
       - aspace_data:/opt/app/data
       - solr_data:/var/solr/data:ro
   
   updater:
     <<: *services_app
+    depends_on:
+      db:
+        condition: service_started
     command: scripts/setup-database.sh
     ports: []
     restart: on-failure
@@ -47,29 +61,39 @@ services:
       GC_TUNE: -XX:-UseLargePages
     ports:
       - 8983:8983
-    command: solr-precreate archivesspace /opt/solr-8.10.0/server/solr/configsets/archivesspace
+    command: solr-precreate archivesspace /opt/solr/server/solr/configsets/archivesspace 
     volumes:
-      - ./solr:/opt/solr-8.10.0/server/solr/configsets/archivesspace/conf:ro
+      - ./solr:/opt/solr-8.11.2/server/solr/configsets/archivesspace/conf:ro
       - solr_data:/var/solr/data
+    healthcheck:
+      test: curl --max-time 10 -f http://localhost:8983/solr/#/~cores/archivesspace || exit 1
+      start_period: 10s
+      interval: 10s
+      timeout: 10s
+      retries: 5
   
   db:
     image: mariadb:10.9
+    depends_on:
+      solr:
+        condition: service_healthy
     environment:
       # @note These are all hardcoded for convenience
-      MYSQL_ROOT_PASSWORD: archivesspace-root
-      MYSQL_DATABASE: archivesspace
-      MYSQL_USER: archivesspace
-      MYSQL_PASSWORD: archivesspace
+      - MYSQL_ROOT_PASSWORD=archivesspace-root
+      - MYSQL_DATABASE=archivesspace
+      - MYSQL_USER=archivesspace
+      - MYSQL_PASSWORD=archivesspace
     ports:
       - 3306:3306
     volumes:
       - db_data:/var/lib/mysql
+      - ./init:/docker-entrypoint-initdb.d 
 
 configs:
   config.rb:
-    file: config/config.rb
-  en.yml:
-    file: config/en.yml
+    file: files/config/config.rb
+  en-locales.yml:
+    file: files/locales/enums/en.yml
 
 secrets:
   APPCONFIG_DB_URL:

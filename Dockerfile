@@ -58,8 +58,14 @@ RUN wget -O digitization_work_order.zip "$ARCHIVESSPACE_PLUGIN_DWO_URL" && \
 # FINAL Stage
 FROM base AS final
 
-# Copy the application
+# Copy the built ArchivesSpace
 COPY --from=aspace --chown=root:archivesspace /opt/app /opt/app
+
+# Copy in our custom config files
+COPY --chown=root:archivesspace files/config/config.rb /opt/app/config/config.rb
+COPY --chown=root:archivesspace files/plugins/local/frontend/assets/images/* /opt/app/plugins/local/frontend/assets/images/
+COPY --chown=root:archivesspace files/plugins/local/frontend/locales/en.rb /opt/app/plugins/local/frontend/locales/en.rb
+
 # Copy the built DWO plugin
 COPY --from=digitization_work_order --chown=root:archivesspace \
     /opt/app/plugins/digitization_work_order \
