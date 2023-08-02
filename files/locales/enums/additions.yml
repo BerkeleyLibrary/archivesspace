@@ -1,3 +1,4 @@
+---
 en:
   enumerations:
     linked_agent_archival_record_relators:
@@ -18,16 +19,16 @@ en:
       lcshac: LCSHAC
       lcnaf: LCNAF
       nad: NAD/ARK II
-      nal: NAL 
-      rvm: RVM 
-      ram: RAM 
+      nal: NAL
+      rvm: RVM
+      ram: RAM
       ulan: ULAN
       viaf: VIAF
     name_rule:
       aacr: AACR
       dacs: DACS
       rda: RDA
-      dcrm_mss: DCRM(MSS) 
+      dcrm_mss: DCRM(MSS)
     extent_extent_type:
       linear_feet: linear feet
       photograph: photograph
@@ -46,7 +47,6 @@ en:
       exposures: exposures
       gigabytes: gigabytes
       leaves: leaves
-      linear_feet: linear feet
       megabytes: megabytes
       photographic_prints: photographic prints
       photographic_slides: photographic slides
@@ -61,8 +61,6 @@ en:
       linearfeet: linear feet [we need a lowercase option in additon to the existing title case term]
       painting: painting
       paintings: paintings
-      photograph: photograph
-      photographs: photographs
       picture: picture
       pictures: pictures
       print: print
@@ -199,7 +197,7 @@ en:
       isadg: ISADG
     accession_acquisition_type:
       gift_purchase: Gift/Purchase
-    subject_source: 
+    subject_source:
       aat: AAT
       cash: CASH
       gmgpc: GMGPC
@@ -229,8 +227,8 @@ en:
       opened: Opened
       closed: Closed
       full: Full
-      no: No
-      yes: Yes
+      false: false
+      true: true
     container_type:
       oversize_box: Oversize-box
       oversize_folder: Oversize-folder
@@ -246,7 +244,7 @@ en:
       a_box: A-box
       b_box: B<200b>-<200b>box
       c_box: C<200b>-box
-      lan_box: <200b><200b>LAN-box
+      lan_box: "<200b><200b>LAN-box"
       neg_box: NEG<200b>-<200b>box
       nneg_box: NNEG<200b>-box
     script_iso15924:
@@ -254,18 +252,18 @@ en:
     file_version_file_format_name:
       mp4: MPEG-4, Part 14
     rights_statement_external_document_identifier_type:
-      ansi: "American National Standards Institute and National Information Standards Organisation number for an ANSI or ANSI/NISO standard"
-      cantic: "CANTIC (Catàleg d'autoritats de noms i títols de Catalunya) (Biblioteca de Catalunya)"
-      gnis: "Geographic Names Information System (GNIS) (United States Geological Survey, Board on Geographic Names)"
-      idref: "IdRef: le referentiel des autorites Sudoc (L'agence bibliographique de l'enseignement superieur (ABES))"
-      isbn-a: "International Standard Book Number (the actionable ISBN) (International DOI Foundation (IDF))"
-      lcmpt: "Library of Congress Medium of Performance Thesaurus for Music (LCMPT) (Washington, DC: Library of Congress)"
-      rbmsbt: "RBMS Controlled Vocabularies: Binding Terms (Rare Books and Manuscripts Section, Association of College & Research Libraries)"
-      rbmsgt: "RBMS Controlled Vocabularies: Genre Terms (Rare Books and Manuscripts Section, Association of College & Research Libraries)"
-      rbmspe: "RBMS Controlled Vocabularies: Provenance Evidence (Rare Books and Manuscripts Section, Association of College & Research Libraries)"
-      rbmsppe: "RBMS Controlled Vocabularies: Printing and Publishing Evidence (Rare Books and Manuscripts Section, Association of College & Research Libraries)"
-      rbmspt: "RBMS Controlled Vocabularies: Paper Terms (Rare Books and Manuscripts Section Association of College & Research Libraries)"
-      rbmsrd: "RBMS Controlled Vocabularies: Relationship Designators (Rare Books and Manuscripts Section, Association of College & Research Libraries)"
-      rbmste: "RBMS Controlled Vocabularies: Type Evidence (Rare Books and Manuscripts Section, Association of College & Research Libraries)"
+      ansi: American National Standards Institute and National Information Standards Organisation number for an ANSI or ANSI/NISO standard
+      cantic: CANTIC (Catàleg d'autoritats de noms i títols de Catalunya) (Biblioteca de Catalunya)
+      gnis: Geographic Names Information System (GNIS) (United States Geological Survey, Board on Geographic Names)
+      idref: 'IdRef: le referentiel des autorites Sudoc (L''agence bibliographique de l''enseignement superieur (ABES))'
+      isbn-a: International Standard Book Number (the actionable ISBN) (International DOI Foundation (IDF))
+      lcmpt: 'Library of Congress Medium of Performance Thesaurus for Music (LCMPT) (Washington, DC: Library of Congress)'
+      rbmsbt: 'RBMS Controlled Vocabularies: Binding Terms (Rare Books and Manuscripts Section, Association of College & Research Libraries)'
+      rbmsgt: 'RBMS Controlled Vocabularies: Genre Terms (Rare Books and Manuscripts Section, Association of College & Research Libraries)'
+      rbmspe: 'RBMS Controlled Vocabularies: Provenance Evidence (Rare Books and Manuscripts Section, Association of College & Research Libraries)'
+      rbmsppe: 'RBMS Controlled Vocabularies: Printing and Publishing Evidence (Rare Books and Manuscripts Section, Association of College & Research Libraries)'
+      rbmspt: 'RBMS Controlled Vocabularies: Paper Terms (Rare Books and Manuscripts Section Association of College & Research Libraries)'
+      rbmsrd: 'RBMS Controlled Vocabularies: Relationship Designators (Rare Books and Manuscripts Section, Association of College & Research Libraries)'
+      rbmste: 'RBMS Controlled Vocabularies: Type Evidence (Rare Books and Manuscripts Section, Association of College & Research Libraries)'
   enumeration_names:
     rights_statement_external_document_identifier_type: Rights Statement External Document Identifier Type

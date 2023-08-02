@@ -13,8 +13,6 @@ services:
     configs:
       - source: config.rb
         target: /opt/app/config/config.rb
-      - source: en-locales.yml
-        target: /opt/app/locales/enums/en.yml
     depends_on:
       db:
         condition: service_started
@@ -92,8 +90,6 @@ services:
 configs:
   config.rb:
     file: files/config/config.rb
-  en-locales.yml:
-    file: files/locales/enums/en.yml
 
 secrets:
   APPCONFIG_DB_URL:

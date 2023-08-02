@@ -61,6 +61,12 @@ FROM base AS final
 # Copy the built ArchivesSpace
 COPY --from=aspace --chown=root:archivesspace /opt/app /opt/app
 
+# merge the additional enums with default enums/en.yml
+COPY --chown=root:archivesspace files/locales/enums/additions.yml /opt/app/files/locales/enums/additions.yml
+RUN wget -qO /usr/local/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64
+RUN chmod ug+x /usr/local/bin/yq
+RUN yq -i '. *= load("/opt/app/files/locales/enums/additions.yml")' /opt/app/locales/enums/en.yml
+
 # Copy in our custom config files
 COPY --chown=root:archivesspace files/config/config.rb /opt/app/config/config.rb
 COPY --chown=root:archivesspace files/plugins/local/frontend/assets/images/* /opt/app/plugins/local/frontend/assets/images/
