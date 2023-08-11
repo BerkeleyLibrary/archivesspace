@@ -29,7 +29,7 @@ RUN apt-get update && \
       unzip && \
     rm -rf /var/lib/apt/lists/* && \
     groupadd -g "$ARCHIVESSPACE_USER_GID" archivesspace && \
-    useradd -M -u "$ARCHIVESSPACE_USER_UID" -g archivesspace archivesspace
+    useradd -m -u "$ARCHIVESSPACE_USER_UID" -g archivesspace archivesspace
 
 # ============================================================
 # Install ArchivesSpace
