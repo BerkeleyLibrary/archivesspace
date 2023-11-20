@@ -32,7 +32,7 @@ services:
       #APPCONFIG_FRONTEND_BRANDING_IMG: "assets/images/banner_logo.png" 
       - APPCONFIG_FRONTEND_BRANDING_IMG=assets/images/aspace_lit_development.png
       - APPCONFIG_FRONTEND_BRANDING_IMG_ALT_TEXT=ArchivesSpace Local Development Logo
-      - APPCONFIG_PLUGINS_OVERRIDE=local,lcnaf,digitization_work_order
+      - APPCONFIG_PLUGINS_OVERRIDE=local,lcnaf,digitization_work_order,material_types
       - APPCONFIG_ENABLE_PUBLIC=false
       - APPCONFIG_SOLR_URL=http://solr:8983/solr/archivesspace
       - APPCONFIG_SOLR_VERIFY_CHECKSUMS=false
