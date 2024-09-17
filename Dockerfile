@@ -99,6 +99,11 @@ COPY --from=material_types --chown=root:archivesspace \
     /opt/app/plugins/material_types \
     /opt/app/plugins/material_types
 
+# Copy the built Timewalk plugin
+COPY --from=timewalk --chown=root:archivesspace \
+    /opt/app/plugins/timewalk \
+    /opt/app/plugins/timewalk
+
 # Install the entrypoint script.
 COPY --chown=root:archivesspace docker-entrypoint.sh /bin/docker-entrypoint.sh
 RUN chmod ug+x /bin/docker-entrypoint.sh
