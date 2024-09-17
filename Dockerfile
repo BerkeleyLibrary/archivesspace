@@ -3,16 +3,18 @@
 # BASE Stage
 FROM ubuntu:20.04 AS base
 
-ARG ARCHIVESSPACE_VERSION="v3.3.1"
-ARG ARCHIVESSPACE_USER_UID="40052"
 ARG ARCHIVESSPACE_USER_GID="40052"
+ARG ARCHIVESSPACE_USER_UID="40052"
+ARG ARCHIVESSPACE_VERSION="v3.3.1"
 ARG DWO_PLUGIN_VERSION="v1.13"
 ARG MT_PLUGIN_VERSION="v1.5"
 ARG MYSQL_CONNECTOR_VERSION="8.0.23"
+ARG TIMEWALK_PLUGIN_VERSION="3.0"
 
 ENV ARCHIVESSPACE_LOGS="/dev/null"
 ENV ARCHIVESSPACE_PLUGIN_DWO_URL="https://github.com/hudmol/digitization_work_order/archive/refs/tags/${DWO_PLUGIN_VERSION}.zip"
 ENV ARCHIVESSPACE_PLUGIN_MT_URL="https://github.com/hudmol/material_types/archive/refs/tags/${MT_PLUGIN_VERSION}.zip"
+ENV ARCHIVESSPACE_PLUGIN_TIMEWALK_URL="https://github.com/alexduryee/timewalk/archive/refs/tags/${TIMEWALK_PLUGIN_VERSION}.zip"
 ENV ARCHIVESSPACE_SOURCE_URL="https://github.com/archivesspace/archivesspace/releases/download/${ARCHIVESSPACE_VERSION}/archivesspace-${ARCHIVESSPACE_VERSION}.zip"
 ENV DEBIAN_FRONTEND="noninteractive"
 ENV LANG="C.UTF-8"
@@ -55,6 +57,16 @@ RUN wget -O digitization_work_order.zip "$ARCHIVESSPACE_PLUGIN_DWO_URL" && \
     mv digitization_work_order-* /opt/app/plugins/digitization_work_order && \
     /opt/app/scripts/initialize-plugin.sh digitization_work_order && \
     rm -f digitization_work_order.zip
+
+# ============================================================
+# Install the Timewalk plugin
+FROM aspace AS timewalk
+WORKDIR /tmp
+RUN wget -O timewalk.zip "$ARCHIVESSPACE_PLUGIN_TIMEWALK_URL" && \
+    unzip timewalk.zip && \
+    mv timewalk-* /opt/app/plugins/timewalk && \
+    /opt/app/scripts/initialize-plugin.sh timewalk && \
+    rm -f timewalk.zip
 
 # ============================================================
 # Install the Material Types plugin
