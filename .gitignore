@@ -1,1 +1,5 @@
 .env
+db/dumps/*
+!db/dumps/.keep
+data
+init

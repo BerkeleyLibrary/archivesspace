@@ -6,20 +6,27 @@ This repo Dockerizes ArchivesSpace. In a nutshell:
 # Populate your local .env file with secrets (e.g. OCLC keys)
 cp .env.example .env
 
-# Build the stack
+# Build the stack / pull dependencies
 docker compose build
+docker compose pull
 
 # Run it all
-docker compose up -d
+docker compose up --wait
+
+# Open ASpace in your browser
+open http://localhost:8080
 ```
+
+For ArchivesSpace v4+, consult their excellent [new documentation site](https://docs.archivesspace.org/).
 
 ### Database Initialization
 
-The database is initialized by an "updater" service which simply runs `scripts/setup-database.sh` and exits. Docker should retry it continuously until it succeeds.
+* The database is initialized by an "updater" service which simply runs `scripts/setup-database.sh` and exits. Docker should retry it continuously until it succeeds.
+* To test migrations with real data, add a dump to the `db/dumps/` directory. The updater still runs against this, making it helpful for testing whether your data will survive a migration.
 
 ### Secrets
 
-We've added an entrypoint.sh shim script which loads files from `/run/secrets` into the environment before running a given command. Secrets can be added there using Docker's normal methods, but read from the application using `ENV`.
+We've added a `docker-entrypoint.sh` shim script which loads files from `/run/secrets` into the environment before running a given command. Secrets can be added there using Docker's normal methods, but read from the application using `ENV`.
 
 ### Configuration File
 
