@@ -2,17 +2,21 @@
 
 services:
   app: &services_app
-    build: .
-    user: root
+    build:
+      context: .
+      args: &aspace-build-args
+        - ARCHIVESSPACE_VERSION=${ARCHIVESSPACE_VERSION:-v4.1.1}
+    # ASpace bundles a lot of services, for a full reference:
+    # @see https://docs.archivesspace.org/customization/configuration/#urls-for-archivesspace-components
     ports:
-      - 8080:8080
-      - 8081:8081
-      - 8082:8082
-      - 8089:8089
-      - 8090:8090
+      - 8080:8080 # staff
+      - 8081:8081 # public (disabled by APPCONFIG_ENABLE_PUBLIC)
+      - 8082:8082 # OAI harvesting
+      - 8888:8888 # documentation
+      - 8089:8089 # backend
+      - 8090:8090 # built-in solr (unused)
+      - 8091:8091 # indexer
     configs:
-      - source: config.rb
-        target: /opt/app/config/config.rb
       - source: en-locales.yml
         target: /opt/app/locales/enums/en.yml
     depends_on:
@@ -22,9 +26,6 @@ services:
         condition: service_healthy
       updater:
         condition: service_completed_successfully
-    secrets:
-      # @note Customize these in your local .env file if necessary
-      - APPCONFIG_DB_URL
     environment:
       # @note ArchivesSpace settings can be specified by setting ENV vars of the form
       #       APPCONFIG_<Upcased Parameter Name>. We have run into problems with any
@@ -34,12 +35,16 @@ services:
       - APPCONFIG_FRONTEND_BRANDING_IMG_ALT_TEXT=ArchivesSpace Local Development Logo
       - APPCONFIG_PLUGINS_OVERRIDE=local,lcnaf,digitization_work_order,material_types
       - APPCONFIG_ENABLE_PUBLIC=false
+      - APPCONFIG_PUI_INDEXER_ENABLED=false
       - APPCONFIG_SOLR_URL=http://solr:8983/solr/archivesspace
       - APPCONFIG_SOLR_VERIFY_CHECKSUMS=false
       - ASPACE_LOGGED_IN_MSG=You are logged in to a local development instance of ArchivesSpace
       - ASPACE_WELCOME_HEADING=ArchivesSpace Development (local)
       - ASPACE_WELCOME_MESSAGE=You are on a local development instance of ArchivesSpace
       - JAVA_OPTS=-Djava.awt.headless=true -Dfile.encoding=UTF-8 -server -Xss512k -Djavax.accessibility.assistive_technologies=''
+    # @note Use `secrets:` instead of `environment:` to test that the entrypoint loads them into ENV
+    secrets:
+      - APPCONFIG_DB_URL
     volumes:
       - aspace_data:/opt/app/data
       - solr_data:/var/solr/data:ro
@@ -54,17 +59,20 @@ services:
     restart: on-failure
 
   solr:
-    image: solr:8.11.2
+    build:
+      context: solr
+      args: *aspace-build-args
+    command: solr-precreate archivesspace /opt/solr/server/solr/configsets/archivesspace
     environment:
+      # @see https://docs.archivesspace.org/provisioning/solr/#setup-the-environment
+      - SOLR_MODULES=analysis-extras
       # Eliminates "failed to reserve shared memory" warning
       # @see https://support.pingidentity.com/s/article/Addressing-Failed-to-reserve-shared-memory-errors
-      GC_TUNE: -XX:-UseLargePages
+      - GC_TUNE=-XX:-UseLargePages
     ports:
       - 8983:8983
-    command: solr-precreate archivesspace /opt/solr/server/solr/configsets/archivesspace
     volumes:
-      - ./solr:/opt/solr-8.11.2/server/solr/configsets/archivesspace/conf:ro
-      - solr_data:/var/solr/data
+      - solr_data:/var/solr
     healthcheck:
       test: curl --max-time 10 -f http://localhost:8983/solr/#/~cores/archivesspace || exit 1
       start_period: 10s
@@ -74,9 +82,6 @@ services:
 
   db:
     image: mariadb:10.9
-    depends_on:
-      solr:
-        condition: service_healthy
     environment:
       # @note These are all hardcoded for convenience
       - MYSQL_ROOT_PASSWORD=archivesspace-root
@@ -85,19 +90,22 @@ services:
       - MYSQL_PASSWORD=archivesspace
     ports:
       - 3306:3306
+    secrets:
+      - source: root-my.cnf
+        target: /root/.my.cnf
     volumes:
+      - ./db/dumps:/docker-entrypoint-initdb.d:ro
       - db_data:/var/lib/mysql
-      - ./init:/docker-entrypoint-initdb.d
 
 configs:
-  config.rb:
-    file: files/config/config.rb
   en-locales.yml:
     file: files/locales/enums/en.yml
 
 secrets:
   APPCONFIG_DB_URL:
     environment: APPCONFIG_DB_URL
+  root-my.cnf:
+    file: files/root-my.cnf
 
 volumes:
   aspace_data: {}

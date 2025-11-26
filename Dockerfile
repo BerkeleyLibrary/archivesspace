@@ -1,14 +1,14 @@
 # ============================================================
 # Adding comment to trigger a build
 # BASE Stage
-FROM ubuntu:20.04 AS base
+FROM ubuntu:noble AS base
 
-ARG ARCHIVESSPACE_VERSION="v3.3.1"
+ARG ARCHIVESSPACE_VERSION="v4.1.1"
 ARG ARCHIVESSPACE_USER_UID="40052"
 ARG ARCHIVESSPACE_USER_GID="40052"
-ARG DWO_PLUGIN_VERSION="v1.13"
+ARG DWO_PLUGIN_VERSION="v2.1"
 ARG MT_PLUGIN_VERSION="v1.5"
-ARG MYSQL_CONNECTOR_VERSION="8.0.23"
+ARG MYSQL_CONNECTOR_VERSION="9.5.0"
 
 ENV ARCHIVESSPACE_LOGS="/dev/null"
 ENV ARCHIVESSPACE_PLUGIN_DWO_URL="https://github.com/hudmol/digitization_work_order/archive/refs/tags/${DWO_PLUGIN_VERSION}.zip"
@@ -16,7 +16,7 @@ ENV ARCHIVESSPACE_PLUGIN_MT_URL="https://github.com/hudmol/material_types/archiv
 ENV ARCHIVESSPACE_SOURCE_URL="https://github.com/archivesspace/archivesspace/releases/download/${ARCHIVESSPACE_VERSION}/archivesspace-${ARCHIVESSPACE_VERSION}.zip"
 ENV DEBIAN_FRONTEND="noninteractive"
 ENV LANG="C.UTF-8"
-ENV MYSQL_CONNECTOR_JAR_URL="https://repo1.maven.org/maven2/mysql/mysql-connector-java/${MYSQL_CONNECTOR_VERSION}/mysql-connector-java-${MYSQL_CONNECTOR_VERSION}.jar"
+ENV MYSQL_CONNECTOR_JAR_URL="https://repo1.maven.org/maven2/com/mysql/mysql-connector-j/${MYSQL_CONNECTOR_VERSION}/mysql-connector-j-${MYSQL_CONNECTOR_VERSION}.jar"
 ENV TZ="UTC"
 
 RUN apt-get update && \
@@ -24,7 +24,7 @@ RUN apt-get update && \
       ca-certificates \
       git \
       netbase \
-      openjdk-11-jre-headless \
+      openjdk-17-jre-headless \
       shared-mime-info \
       vim \
       wget \
@@ -70,26 +70,24 @@ RUN wget -O material_types.zip "$ARCHIVESSPACE_PLUGIN_MT_URL" && \
 FROM base AS final
 
 # Copy the built ArchivesSpace
-COPY --from=aspace --chown=root:archivesspace /opt/app /opt/app
+COPY --from=aspace --chown=archivesspace:archivesspace /opt/app /opt/app
 
 # Copy in our custom config files
-COPY --chown=root:archivesspace files/config/config.rb /opt/app/config/config.rb
-COPY --chown=root:archivesspace files/plugins/local/frontend/assets/images/* /opt/app/plugins/local/frontend/assets/images/
-COPY --chown=root:archivesspace files/plugins/local/frontend/locales/en.rb /opt/app/plugins/local/frontend/locales/en.rb
+COPY --chown=archivesspace:archivesspace files/plugins/local/frontend/assets/images/* /opt/app/plugins/local/frontend/assets/images/
+COPY --chown=archivesspace:archivesspace files/plugins/local/frontend/locales/en.rb /opt/app/plugins/local/frontend/locales/en.rb
 
 # Copy the built DWO plugin
-COPY --from=digitization_work_order --chown=root:archivesspace \
+COPY --from=digitization_work_order --chown=archivesspace:archivesspace \
     /opt/app/plugins/digitization_work_order \
     /opt/app/plugins/digitization_work_order
 
 # Copy the built Materials Type plugin
-COPY --from=material_types --chown=root:archivesspace \
+COPY --from=material_types --chown=archivesspace:archivesspace \
     /opt/app/plugins/material_types \
     /opt/app/plugins/material_types
 
 # Install the entrypoint script.
-COPY --chown=root:archivesspace docker-entrypoint.sh /bin/docker-entrypoint.sh
-RUN chmod ug+x /bin/docker-entrypoint.sh
+COPY --chown=archivesspace:archivesspace files/docker-entrypoint.sh /bin/docker-entrypoint.sh
 ENTRYPOINT ["/bin/docker-entrypoint.sh"]
 
 USER archivesspace
