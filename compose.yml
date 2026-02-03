@@ -1,4 +1,4 @@
-version: "3.8"
+---
 
 services:
   app: &services_app
@@ -21,7 +21,7 @@ services:
       solr:
         condition: service_healthy
       updater:
-        condition: service_completed_successfully 
+        condition: service_completed_successfully
     secrets:
       # @note Customize these in your local .env file if necessary
       - APPCONFIG_DB_URL
@@ -29,7 +29,7 @@ services:
       # @note ArchivesSpace settings can be specified by setting ENV vars of the form
       #       APPCONFIG_<Upcased Parameter Name>. We have run into problems with any
       #       that require parsing JSON, however, so avoid that.
-      #APPCONFIG_FRONTEND_BRANDING_IMG: "assets/images/banner_logo.png" 
+      #APPCONFIG_FRONTEND_BRANDING_IMG: "assets/images/banner_logo.png"
       - APPCONFIG_FRONTEND_BRANDING_IMG=assets/images/aspace_lit_development.png
       - APPCONFIG_FRONTEND_BRANDING_IMG_ALT_TEXT=ArchivesSpace Local Development Logo
       - APPCONFIG_PLUGINS_OVERRIDE=local,lcnaf,digitization_work_order,material_types
@@ -43,7 +43,7 @@ services:
     volumes:
       - aspace_data:/opt/app/data
       - solr_data:/var/solr/data:ro
-  
+
   updater:
     <<: *services_app
     depends_on:
@@ -52,7 +52,7 @@ services:
     command: scripts/setup-database.sh
     ports: []
     restart: on-failure
-  
+
   solr:
     image: solr:8.11.2
     environment:
@@ -61,7 +61,7 @@ services:
       GC_TUNE: -XX:-UseLargePages
     ports:
       - 8983:8983
-    command: solr-precreate archivesspace /opt/solr/server/solr/configsets/archivesspace 
+    command: solr-precreate archivesspace /opt/solr/server/solr/configsets/archivesspace
     volumes:
       - ./solr:/opt/solr-8.11.2/server/solr/configsets/archivesspace/conf:ro
       - solr_data:/var/solr/data
@@ -71,7 +71,7 @@ services:
       interval: 10s
       timeout: 10s
       retries: 5
-  
+
   db:
     image: mariadb:10.9
     depends_on:
@@ -87,7 +87,7 @@ services:
       - 3306:3306
     volumes:
       - db_data:/var/lib/mysql
-      - ./init:/docker-entrypoint-initdb.d 
+      - ./init:/docker-entrypoint-initdb.d
 
 configs:
   config.rb:
