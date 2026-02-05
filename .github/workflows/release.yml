@@ -48,8 +48,8 @@ jobs:
           tags: |
             type=ref,event=tag
             type=match,pattern=\d+ 
-            type=match,pattern=\d+\d+ 
-            type=match,pattern=\d+\d+\d+
+            type=match,pattern=\d+\.\d+ 
+            type=match,pattern=\d+\.\d+\.\d+
             type=match,pattern=.*
 
       - name: Retag the pulled image
