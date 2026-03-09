@@ -135,7 +135,7 @@ AppConfig[:plugins] = (ENV['APPCONFIG_PLUGINS_OVERRIDE'] || 'local,lcnaf').split
 #
 #AppConfig[:oai_ead_options] = {}
 ## alternate example:  AppConfig[:oai_ead_options] = { :include_daos => true, :use_numbered_c_tags => true }
-#
+AppConfig[:numbered_cs] = true
 ###
 ### Other less commonly changed settings are below
 ###
