@@ -30,4 +30,5 @@ We've added a `docker-entrypoint.sh` shim script which loads files from `/run/se
 
 ### Configuration File
 
-Since ASpace's built-in `ENV['APPCONFIG_']` configuration method doesn't always work (particularly when parsing JSON), we template the config.rb file directly into the image at runtime. You're free to modify that file as you see fit in testing. Note that the version included in this repo is purely for development, and any changes to it in a long-lived environment would need to be coordinated.
+Since ASpace's built-in `ENV['APPCONFIG_']` configuration method doesn't always work (particularly when parsing JSON), we template the config.rb file directly into the image at runtime. You're free to modify that file as you see fit in testing. Note that the version included in this repo is purely for development, and any changes to it in a long-lived environment would need to be coordinated. Any long lived configuration changes should be made in the docker swarm stack file. Those values will override what's in the config.rb. 
+
