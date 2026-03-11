@@ -74,6 +74,7 @@ COPY --from=aspace --chown=archivesspace:archivesspace /opt/app /opt/app
 
 # Copy in our custom config files
 COPY --chown=archivesspace:archivesspace files/plugins/local/frontend/assets/images/* /opt/app/plugins/local/frontend/assets/images/
+COPY --chown=archivesspace:archivesspace files/plugins/local/frontend/views/resources/* /opt/app/plugins/local/frontend/views/resources/
 COPY --chown=archivesspace:archivesspace files/plugins/local/frontend/locales/en.rb /opt/app/plugins/local/frontend/locales/en.rb
 
 # Copy the built DWO plugin
