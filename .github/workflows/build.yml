@@ -9,9 +9,42 @@ on:
 env:
   BUILD_SUFFIX: -build-${{ github.run_id }}_${{ github.run_attempt }}
   DOCKER_METADATA_SET_OUTPUT_ENV: 'true'
+  ARCHIVESSPACE_RESOURCE_TOOLBAR_SHA256: 2feb4bf50a103574dc541d36dd237b5d49f6e663439dfe23314b89ccf964b83d
 
 jobs:
+  verify-upstream:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Verify upstream resource toolbar checksum
+        run: |
+          set -euo pipefail
+          version="$(sed -n 's/^ARG ARCHIVESSPACE_VERSION="\([^"]*\)"/\1/p' Dockerfile)"
+          repo_dir="$(mktemp -d)"
+          trap 'rm -rf "$repo_dir"' EXIT
+
+          if [[ -z "$version" ]]; then
+            echo "Could not determine ARCHIVESSPACE_VERSION from .env.example"
+            exit 1
+          fi
+
+          git init -q "$repo_dir"
+          git -C "$repo_dir" remote add origin https://github.com/archivesspace/archivesspace.git
+          git -C "$repo_dir" fetch --depth 1 origin "refs/tags/${version}:refs/tags/${version}"
+
+          actual="$(git -C "$repo_dir" show "${version}:frontend/app/views/resources/_toolbar.html.erb" | shasum -a 256 | awk '{print $1}')"
+
+          if [[ "$actual" != "$ARCHIVESSPACE_RESOURCE_TOOLBAR_SHA256" ]]; then
+            echo "Expected checksum: $ARCHIVESSPACE_RESOURCE_TOOLBAR_SHA256"
+            echo "Actual checksum:   $actual"
+            echo "Upstream file changed for ArchivesSpace ${version}"
+            exit 1
+          fi
+
   build:
+    needs: verify-upstream
     runs-on: ${{ matrix.runner }}
     outputs:
       image-arm64: ${{ steps.gen-output.outputs.image-arm64 }}
