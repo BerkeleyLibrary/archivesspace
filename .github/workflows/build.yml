@@ -145,22 +145,20 @@ jobs:
         run: |
           set -euo pipefail
 
-          csum="$(docker compose exec -T app sh -lc '
-            upstream="$(find /opt/app/data/tmp -type f -path "*/webapp/WEB-INF/app/views/resources/_toolbar.html.erb" | head -n1)"
-            if [ -z "$upstream" ]; then
-              echo "__MISSING__"
-              exit 0
-            fi
-            diff "$upstream" /opt/app/plugins/local/frontend/views/resources/_toolbar.html.erb | sha256sum | cut -f1 -d" "
-          ')"
-
-          if [[ "$csum" == "__MISSING__" ]]; then
+          upstream="$(docker compose exec -T app sh -lc 'find /opt/app/data/tmp -type f -path "*/webapp/WEB-INF/app/views/resources/_toolbar.html.erb" | head -n1')"
+          if [[ -z "$upstream" ]]; then
             echo "Could not find extracted upstream _toolbar.html.erb under /opt/app/data/tmp"
+            docker compose exec -T app sh -lc 'ls -la /opt/app/data/tmp || true'
             exit 1
           fi
 
+          diff_output="$(docker compose exec -T app sh -lc "diff '$upstream' /opt/app/plugins/local/frontend/views/resources/_toolbar.html.erb || true")"
+          csum="$(printf '%s' "$diff_output" | sha256sum | cut -f1 -d' ')"
+          echo "Toolbar diff checksum: $csum"
+
           if [[ "$csum" != "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855" ]]; then
-            echo "resources/toolbar.html.erb checksum differs. We override this file in plugins so probably needs to be compared and updated" 
+            echo "resources/_toolbar.html.erb differs from upstream extracted WAR file"
+            printf '%s\n' "$diff_output" | head -n 120
             exit 1
           fi
 
