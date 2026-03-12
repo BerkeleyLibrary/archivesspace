@@ -26,7 +26,7 @@ jobs:
           trap 'rm -rf "$repo_dir"' EXIT
 
           if [[ -z "$version" ]]; then
-            echo "Could not determine ARCHIVESSPACE_VERSION from .env.example"
+            echo "Could not determine ARCHIVESSPACE_VERSION from Dockerfile"
             exit 1
           fi
 
