@@ -137,19 +137,32 @@ jobs:
           docker compose up --wait
           docker compose exec -u root app chown archivesspace:archivesspace artifacts
 
+      - name: Query the ASpace home page
+        run: |
+          curl --location --fail --retry 30 --retry-all-errors http://localhost:8080/
+
       - name: Verify deployed resource toolbar matches upstream
         run: |
           set -euo pipefail
-          csum="$(docker compose exec -T app sh -lc "diff /opt/app/data/tmp/jetty-0_0_0_0-8080-frontend_war-_-any-*/webapp/WEB-INF/app/views/resources/_toolbar.html.erb /opt/app/plugins/local/frontend/views/resources/_toolbar.html.erb | sha256sum | cut -f1 -d' '")"
+
+          csum="$(docker compose exec -T app sh -lc '
+            upstream="$(find /opt/app/data/tmp -type f -path "*/webapp/WEB-INF/app/views/resources/_toolbar.html.erb" | head -n1)"
+            if [ -z "$upstream" ]; then
+              echo "__MISSING__"
+              exit 0
+            fi
+            diff "$upstream" /opt/app/plugins/local/frontend/views/resources/_toolbar.html.erb | sha256sum | cut -f1 -d" "
+          ')"
+
+          if [[ "$csum" == "__MISSING__" ]]; then
+            echo "Could not find extracted upstream _toolbar.html.erb under /opt/app/data/tmp"
+            exit 1
+          fi
 
           if [[ "$csum" != "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855" ]]; then
             echo "resources/toolbar.html.erb checksum differs. We override this file in plugins so probably needs to be compared and updated" 
             exit 1
           fi
-
-      - name: Query the ASpace home page
-        run: |
-          curl --location --fail --retry 30 --retry-all-errors http://localhost:8080/
 
       - name: Copy out artifacts
         if: ${{ always() }}
