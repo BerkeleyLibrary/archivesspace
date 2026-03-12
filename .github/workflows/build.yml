@@ -9,6 +9,7 @@ on:
 env:
   BUILD_SUFFIX: -build-${{ github.run_id }}_${{ github.run_attempt }}
   DOCKER_METADATA_SET_OUTPUT_ENV: 'true'
+  ARCHIVESSPACE_RESOURCE_TOOLBAR_DIFF_SHA256: 5122e9837c25fefe58d64ff499e570b5120f527f3654de4bb0acac22d5cfc1ed
 
 jobs:
   build:
@@ -156,8 +157,9 @@ jobs:
           csum="$(printf '%s' "$diff_output" | sha256sum | cut -f1 -d' ')"
           echo "Toolbar diff checksum: $csum"
 
-          if [[ "$csum" != "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855" ]]; then
-            echo "resources/_toolbar.html.erb differs from upstream extracted WAR file"
+          if [[ "$csum" != "$ARCHIVESSPACE_RESOURCE_TOOLBAR_DIFF_SHA256" ]]; then
+            echo "Expected diff checksum: $ARCHIVESSPACE_RESOURCE_TOOLBAR_DIFF_SHA256"
+            echo "resources/_toolbar.html.erb diff changed from the expected override patch"
             printf '%s\n' "$diff_output" | head -n 120
             exit 1
           fi
