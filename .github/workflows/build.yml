@@ -9,6 +9,7 @@ on:
 env:
   BUILD_SUFFIX: -build-${{ github.run_id }}_${{ github.run_attempt }}
   DOCKER_METADATA_SET_OUTPUT_ENV: 'true'
+  ARCHIVESSPACE_RESOURCE_TOOLBAR_DIFF_SHA256: 5122e9837c25fefe58d64ff499e570b5120f527f3654de4bb0acac22d5cfc1ed
 
 jobs:
   build:
@@ -140,6 +141,28 @@ jobs:
       - name: Query the ASpace home page
         run: |
           curl --location --fail --retry 30 --retry-all-errors http://localhost:8080/
+
+      - name: Verify deployed resource toolbar matches upstream
+        run: |
+          set -euo pipefail
+
+          upstream="$(docker compose exec -T app sh -lc 'find /opt/app/data/tmp -type f -path "*/webapp/WEB-INF/app/views/resources/_toolbar.html.erb" | head -n1')"
+          if [[ -z "$upstream" ]]; then
+            echo "Could not find extracted upstream _toolbar.html.erb under /opt/app/data/tmp"
+            docker compose exec -T app sh -lc 'ls -la /opt/app/data/tmp || true'
+            exit 1
+          fi
+
+          diff_output="$(docker compose exec -T app sh -lc "diff '$upstream' /opt/app/plugins/local/frontend/views/resources/_toolbar.html.erb || true")"
+          csum="$(printf '%s' "$diff_output" | sha256sum | cut -f1 -d' ')"
+          echo "Toolbar diff checksum: $csum"
+
+          if [[ "$csum" != "$ARCHIVESSPACE_RESOURCE_TOOLBAR_DIFF_SHA256" ]]; then
+            echo "Expected diff checksum: $ARCHIVESSPACE_RESOURCE_TOOLBAR_DIFF_SHA256"
+            echo "resources/_toolbar.html.erb diff changed from the expected override patch"
+            printf '%s\n' "$diff_output" | head -n 120
+            exit 1
+          fi
 
       - name: Copy out artifacts
         if: ${{ always() }}

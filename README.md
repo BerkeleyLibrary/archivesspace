@@ -28,6 +28,12 @@ For ArchivesSpace v4+, consult their excellent [new documentation site](https://
 
 We've added a `docker-entrypoint.sh` shim script which loads files from `/run/secrets` into the environment before running a given command. Secrets can be added there using Docker's normal methods, but read from the application using `ENV`.
 
+### _toolbar.html.erb override
+
+We are overriding the resources/_toolbar.html.erb view so the numbered_cs option is checked for resource EAD export. There is a check in the build.yml to 
+ensure the checksum for the Aspace _toolbar.html.erb hasn't changed if we upgrade Aspace versions. If it does the build will fail. If it fails for that reason the
+files/plugins/local/frontend/views/resources/_toolbar.html.erb file (override file) will need to be updated to reflect the new toolbar (frontend/app/views/resources/_toolbar.html.erb).
+
 ### Configuration File
 
 Since ASpace's built-in `ENV['APPCONFIG_']` configuration method doesn't always work (particularly when parsing JSON), we template the config.rb file directly into the image at runtime. You're free to modify that file as you see fit in testing. Note that the version included in this repo is purely for development, and any changes to it in a long-lived environment would need to be coordinated. Any long lived configuration changes should be made in the docker swarm stack file. Those values will override what's in the config.rb. 
