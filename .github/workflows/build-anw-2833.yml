@@ -1,0 +1,66 @@
+name: Build ANW-2833 ArchivesSpace Image
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+env:
+  IMAGE_NAME: ghcr.io/berkeleylibrary/archivesspace
+  UPSTREAM_REPOSITORY: BerkeleyLibrary/archivesspace-upstream
+  UPSTREAM_REF: ANW-2833
+
+jobs:
+  build:
+    name: Build and publish the ANW-2833 image
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout ArchivesSpace ANW-2833
+        uses: actions/checkout@v7
+        with:
+          repository: ${{ env.UPSTREAM_REPOSITORY }}
+          ref: ${{ env.UPSTREAM_REF }}
+          submodules: true
+          persist-credentials: false
+
+      - id: source
+        name: Record the upstream revision
+        run: |
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+          echo "short_sha=$(git rev-parse --short=7 HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - id: metadata
+        name: Generate image metadata
+        uses: docker/metadata-action@v6
+        with:
+          images: ${{ env.IMAGE_NAME }}
+          labels: |
+            org.opencontainers.image.source=https://github.com/${{ env.UPSTREAM_REPOSITORY }}
+            org.opencontainers.image.revision=${{ steps.source.outputs.sha }}
+          tags: |
+            type=raw,value=sha-${{ steps.source.outputs.short_sha }}-build-${{ github.run_id }}_${{ github.run_attempt }}
+            type=raw,value=sha-${{ steps.source.outputs.short_sha }}
+            type=raw,value=${{ env.UPSTREAM_REF }}
+
+      - name: Build and push the ArchivesSpace image
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          labels: ${{ steps.metadata.outputs.labels }}
+          provenance: mode=max
+          push: true
+          sbom: true
+          tags: ${{ steps.metadata.outputs.tags }}
